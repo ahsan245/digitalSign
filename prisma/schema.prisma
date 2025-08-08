@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  
+  // Image dimensions
+  width       Int
+  height      Int
+  
+  // Image processing options
+  quality     Int      @default(80)
+  format      String   @default("jpeg") // jpeg, png, webp, avif
+  
+  // Resize options
+  resizeMode  String   @default("cover") // cover, contain, fill, inside, outside
+  fit         String   @default("cover") // cover, contain, fill, inside, outside
+  
+  // Crop options
+  cropMode    String?  // center, top, bottom, left, right, etc.
+  cropX       Int?     // x position for manual crop
+  cropY       Int?     // y position for manual crop
+  cropWidth   Int?     // width for manual crop
+  cropHeight  Int?     // height for manual crop
+  
+  // Filters and effects
+  brightness  Float?   // -100 to 100
+  contrast    Float?   // -100 to 100
+  saturation  Float?   // -100 to 100
+  hue         Float?   // 0 to 360
+  blur        Float?   // 0.3 to 1000
+  sharpen     Float?   // 0 to 100
+  
+  // Watermark options
+  watermarkEnabled    Boolean @default(false)
+  watermarkText       String?
+  watermarkPosition   String? // top-left, top-right, bottom-left, bottom-right, center
+  watermarkOpacity    Float?  // 0 to 1
+  watermarkSize       Int?    // font size for text watermark
+  
+  // Background options
+  backgroundColor     String? // hex color for padding/background
+  backgroundBlur      Boolean @default(false)
+  
+  // Box/Frame options
+  boxEnabled          Boolean @default(false)
+  boxColor            String? // hex color for box background
+  boxPadding          Int?    // padding inside box in pixels
+  boxBorderWidth      Int?    // border width in pixels
+  boxBorderColor      String? // border color in hex
+  boxBorderRadius     Int?    // border radius in pixels
+  boxShadowEnabled    Boolean @default(false)
+  boxShadowOffsetX    Int?    // shadow offset X
+  boxShadowOffsetY    Int?    // shadow offset Y
+  boxShadowBlur       Int?    // shadow blur radius
+  boxShadowOpacity    Float?  // shadow opacity 0 to 1
+  boxShadowColor      String? // shadow color in hex
+  
+  // Output options
+  progressive         Boolean @default(true)
+  optimizeScans       Boolean @default(true)
+  stripMetadata       Boolean @default(true)
+  
+  // Template settings
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  uploads     Upload[]
+  
+  @@map("templates")
+}
+
+model Upload {
+  id              String   @id @default(cuid())
+  
+  // Original file info
+  originalName    String
+  fileName        String
+  filePath        String
+  mimeType        String
+  fileSize        Int
+  
+  // Processed file info
+  processedPath   String?
+  processedUrl    String?
+  
+  // Cloudinary info
+  cloudinaryId    String?
+  cloudinaryUrl   String?
+  
+  // Image dimensions
+  originalWidth   Int?
+  originalHeight  Int?
+  processedWidth  Int?
+  processedHeight Int?
+  
+  // Template used
+  templateId      String?
+  template        Template? @relation(fields: [templateId], references: [id])
+  
+  // Processing status
+  status          String   @default("pending") // pending, processing, completed, failed
+  errorMessage    String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("uploads")
+}

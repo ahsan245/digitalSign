@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            text-align: center;
+        }
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .templates-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .template-item {
+            padding: 10px;
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .template-item:hover {
+            background-color: #f8f9fa;
+        }
+        .template-item.selected {
+            background-color: #e3f2fd;
+            border-color: #007bff;
+        }
+        .template-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .api-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .api-links a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .api-links a:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Image Processing API Test</h1>
+        
+        <div class="api-links">
+            <a href="/api-docs" target="_blank">📚 API Documentation</a>
+            <a href="/api/templates" target="_blank">📋 View Templates</a>
+            <a href="/health" target="_blank">💚 Health Check</a>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('templates')">Templates</div>
+            <div class="tab" onclick="switchTab('upload')">Upload with Template</div>
+            <div class="tab" onclick="switchTab('multiple')">Multiple Upload</div>
+        </div>
+
+        <!-- Templates Management -->
+        <div id="templates" class="tab-content active">
+            <h3>Template Management</h3>
+            
+            <button onclick="loadTemplates()">🔄 Refresh Templates</button>
+            <button onclick="createDefaultTemplates()" class="secondary">➕ Create Default Templates</button>
+            
+            <div class="form-group">
+                <label>Available Templates:</label>
+                <div id="templatesList" class="templates-list">
+                    <p>Click "Refresh Templates" to load templates</p>
+                </div>
+            </div>
+
+            <h4>Create New Template</h4>
+            <form id="templateForm">
+                <div class="form-group">
+                    <label for="templateName">Template Name:</label>
+                    <input type="text" id="templateName" name="name" required placeholder="e.g., Instagram Square">
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateDescription">Description:</label>
+                    <textarea id="templateDescription" name="description" rows="2" placeholder="Template description..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="templateWidth">Width (px):</label>
+                        <input type="number" id="templateWidth" name="width" required min="1" max="8000" placeholder="1080">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="templateHeight">Height (px):</label>
+                        <input type="number" id="templateHeight" name="height" required min="1" max="8000" placeholder="1080">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="templateQuality">Quality:</label>
+                        <input type="number" id="templateQuality" name="quality" min="1" max="100" value="80">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="templateFormat">Format:</label>
+                        <select id="templateFormat" name="format">
+                            <option value="jpeg">JPEG</option>
+                            <option value="png">PNG</option>
+                            <option value="webp">WebP</option>
+                            <option value="avif">AVIF</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit">Create Template</button>
+            </form>
+        </div>
+
+        <!-- Upload with Template -->
+        <div id="upload" class="tab-content">
+            <h3>Upload with Template Processing</h3>
+            
+            <form id="uploadWithTemplateForm">
+                <div class="form-group">
+                    <label for="uploadFile">Choose File:</label>
+                    <input type="file" id="uploadFile" name="file" accept="image/*,video/*" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Template:</label>
+                    <div id="uploadTemplatesList" class="templates-list">
+                        <p>Loading templates...</p>
+                    </div>
+                    <input type="hidden" id="selectedTemplateId" name="templateId">
+                </div>
+                
+                <div class="form-group">
+                    <label for="uploadFolder">Folder (optional):</label>
+                    <input type="text" id="uploadFolder" name="folder" placeholder="uploads">
+                </div>
+                
+                <button type="submit">Upload & Process</button>
+            </form>
+        </div>
+
+        <!-- Multiple Upload -->
+        <div id="multiple" class="tab-content">
+            <h3>Multiple Files Upload</h3>
+            
+            <form id="multipleUploadForm">
+                <div class="form-group">
+                    <label for="multipleFiles">Choose Files (max 10):</label>
+                    <input type="file" id="multipleFiles" name="files" accept="image/*,video/*" multiple required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="folderMultiple">Folder (optional):</label>
+                    <input type="text" id="folderMultiple" name="folder" placeholder="uploads">
+                </div>
+                
+                <button type="submit">Upload Multiple Files</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Processing... Please wait</p>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        let templates = [];
+        let selectedTemplateId = null;
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+
+            // Load templates when switching to upload tab
+            if (tabName === 'upload' && templates.length === 0) {
+                loadTemplatesForUpload();
+            }
+        }
+
+        function showResult(message, isSuccess = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Load templates
+        async function loadTemplates() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/templates?limit=50');
+                const result = await response.json();
+                
+                if (result.success) {
+                    templates = result.data;
+                    displayTemplates(templates, 'templatesList');
+                    showResult(`✅ Loaded ${templates.length} templates`);
+                } else {
+                    showResult(`❌ Failed to load templates: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Error loading templates: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadTemplatesForUpload() {
+            try {
+                const response = await fetch('/api/templates?isActive=true&limit=50');
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayTemplatesForUpload(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading templates for upload:', error);
+            }
+        }
+
+        function displayTemplates(templateList, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (templateList.length === 0) {
+                container.innerHTML = '<p>No templates found. Create some templates first!</p>';
+                return;
+            }
+
+            container.innerHTML = templateList.map(template => `
+                <div class="template-item" onclick="selectTemplate('${template.id}', '${containerId}')">
+                    <strong>${template.name}</strong>
+                    ${template.isDefault ? '<span style="color: #007bff;">(Default)</span>' : ''}
+                    ${!template.isActive ? '<span style="color: #dc3545;">(Inactive)</span>' : ''}
+                    <div class="template-info">
+                        ${template.width}x${template.height} • ${template.format.toUpperCase()} • Quality: ${template.quality}%
+                        ${template.description ? `<br>${template.description}` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayTemplatesForUpload(templateList) {
+            const container = document.getElementById('uploadTemplatesList');
+            
+            container.innerHTML = '<div class="template-item" onclick="selectTemplateForUpload(null)"><strong>No Template</strong><div class="template-info">Upload without processing</div></div>' + 
+                templateList.map(template => `
+                <div class="template-item" onclick="selectTemplateForUpload('${template.id}')">
+                    <strong>${template.name}</strong>
+                    ${template.isDefault ? '<span style="color: #007bff;">(Default)</span>' : ''}
+                    <div class="template-info">
+                        ${template.width}x${template.height} • ${template.format.toUpperCase()} • Quality: ${template.quality}%
+                        ${template.description ? `<br>${template.description}` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectTemplate(templateId, containerId) {
+            // Remove previous selection
+            document.querySelectorAll(`#${containerId} .template-item`).forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.target.closest('.template-item').classList.add('selected');
+        }
+
+        function selectTemplateForUpload(templateId) {
+            selectedTemplateId = templateId;
+            document.getElementById('selectedTemplateId').value = templateId || '';
+            
+            // Remove previous selection
+            document.querySelectorAll('#uploadTemplatesList .template-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.target.closest('.template-item').classList.add('selected');
+        }
+
+        // Create default templates
+        async function createDefaultTemplates() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/templates/create-defaults', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult(`✅ Created ${result.data.length} default templates successfully`);
+                    loadTemplates(); // Refresh the list
+                } else {
+                    showResult(`❌ Failed to create default templates: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Error creating default templates: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Template form submission
+        document.getElementById('templateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const templateData = Object.fromEntries(formData);
+            
+            // Convert numbers
+            templateData.width = parseInt(templateData.width);
+            templateData.height = parseInt(templateData.height);
+            templateData.quality = parseInt(templateData.quality);
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(templateData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult(`✅ Template "${result.data.name}" created successfully`);
+                    e.target.reset();
+                    loadTemplates(); // Refresh the list
+                } else {
+                    showResult(`❌ Failed to create template: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Error creating template: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Upload with template form submission
+        document.getElementById('uploadWithTemplateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('uploadFile');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file', false);
+                return;
+            }
+            
+            formData.append('file', fileInput.files[0]);
+            
+            const folder = document.getElementById('uploadFolder').value;
+            if (folder) formData.append('folder', folder);
+            
+            if (selectedTemplateId) {
+                formData.append('templateId', selectedTemplateId);
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/upload/single', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let successMessage = `<h3>✅ Upload & Processing Successful!</h3>`;
+                    successMessage += `<p><strong>URL:</strong> <a href="${result.data.cloudinary.url}" target="_blank">${result.data.cloudinary.url}</a></p>`;
+                    
+                    if (result.data.templateUsed) {
+                        successMessage += `<p><strong>Template Used:</strong> ${result.data.templateUsed.name} (${result.data.templateUsed.dimensions})</p>`;
+                    }
+                    
+                    if (result.data.processing) {
+                        successMessage += `<p><strong>Processing:</strong> ${result.data.processing.originalWidth}x${result.data.processing.originalHeight} → ${result.data.processing.processedWidth}x${result.data.processing.processedHeight}</p>`;
+                    }
+                    
+                    if (result.data.variants) {
+                        successMessage += `<h4>Image Variants:</h4>`;
+                        successMessage += `<p><strong>Thumbnail:</strong> <a href="${result.data.variants.thumbnail}" target="_blank">View</a></p>`;
+                        successMessage += `<p><strong>Medium:</strong> <a href="${result.data.variants.medium}" target="_blank">View</a></p>`;
+                    }
+                    
+                    showResult(successMessage);
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Upload failed: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Multiple upload form submission
+        document.getElementById('multipleUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const filesInput = document.getElementById('multipleFiles');
+            
+            if (!filesInput.files.length) {
+                showResult('Please select at least one file', false);
+                return;
+            }
+            
+            for (let file of filesInput.files) {
+                formData.append('files', file);
+            }
+            
+            const folder = document.getElementById('folderMultiple').value;
+            if (folder) formData.append('folder', folder);
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let successMessage = `<h3>✅ Multiple Upload Complete!</h3>`;
+                    successMessage += `<p><strong>Summary:</strong> ${result.data.summary.successful} successful, ${result.data.summary.failed} failed</p>`;
+                    
+                    if (result.data.successful.length > 0) {
+                        successMessage += `<h4>Successful Uploads:</h4>`;
+                        result.data.successful.forEach((upload, index) => {
+                            successMessage += `<p><strong>File ${index + 1}:</strong> <a href="${upload.url}" target="_blank">${upload.originalFile.name}</a></p>`;
+                        });
+                    }
+                    
+                    showResult(successMessage);
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Upload failed: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Load templates on page load
+        window.addEventListener('load', () => {
+            loadTemplates();
+        });
+    </script>
+</body>
+</html>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            text-align: center;
+        }
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 File Upload Test</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('single')">Single Upload</div>
+            <div class="tab" onclick="switchTab('multiple')">Multiple Upload</div>
+        </div>
+
+        <!-- Single File Upload -->
+        <div id="single" class="tab-content active">
+            <form id="singleUploadForm">
+                <div class="form-group">
+                    <label for="singleFile">Choose File:</label>
+                    <input type="file" id="singleFile" name="file" accept="image/*,video/*" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="folder">Folder (optional):</label>
+                    <input type="text" id="folder" name="folder" placeholder="uploads">
+                </div>
+                
+                <div class="form-group">
+                    <label for="quality">Quality:</label>
+                    <select id="quality" name="quality">
+                        <option value="auto">Auto</option>
+                        <option value="best">Best</option>
+                        <option value="good">Good</option>
+                        <option value="eco">Eco</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="width">Width (optional):</label>
+                    <input type="number" id="width" name="width" placeholder="e.g., 800">
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">Height (optional):</label>
+                    <input type="number" id="height" name="height" placeholder="e.g., 600">
+                </div>
+                
+                <button type="submit">Upload Single File</button>
+            </form>
+        </div>
+
+        <!-- Multiple Files Upload -->
+        <div id="multiple" class="tab-content">
+            <form id="multipleUploadForm">
+                <div class="form-group">
+                    <label for="multipleFiles">Choose Files (max 10):</label>
+                    <input type="file" id="multipleFiles" name="files" accept="image/*,video/*" multiple required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="folderMultiple">Folder (optional):</label>
+                    <input type="text" id="folderMultiple" name="folder" placeholder="uploads">
+                </div>
+                
+                <button type="submit">Upload Multiple Files</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Uploading... Please wait</p>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function showResult(message, isSuccess = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Single file upload
+        document.getElementById('singleUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('singleFile');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file', false);
+                return;
+            }
+            
+            formData.append('file', fileInput.files[0]);
+            
+            // Add optional parameters
+            const folder = document.getElementById('folder').value;
+            const quality = document.getElementById('quality').value;
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+            
+            if (folder) formData.append('folder', folder);
+            if (quality) formData.append('quality', quality);
+            if (width) formData.append('width', width);
+            if (height) formData.append('height', height);
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/upload/single', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult(`
+                        <h3>✅ Upload Successful!</h3>
+                        <p><strong>URL:</strong> <a href="${result.data.url}" target="_blank">${result.data.url}</a></p>
+                        <p><strong>Public ID:</strong> ${result.data.public_id}</p>
+                        <p><strong>Format:</strong> ${result.data.format}</p>
+                        <p><strong>Size:</strong> ${result.data.width}x${result.data.height}</p>
+                        ${result.data.variants ? `
+                            <h4>Image Variants:</h4>
+                            <p><strong>Thumbnail:</strong> <a href="${result.data.variants.thumbnail}" target="_blank">View</a></p>
+                            <p><strong>Small:</strong> <a href="${result.data.variants.small}" target="_blank">View</a></p>
+                            <p><strong>Medium:</strong> <a href="${result.data.variants.medium}" target="_blank">View</a></p>
+                        ` : ''}
+                    `);
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Upload failed: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Multiple files upload
+        document.getElementById('multipleUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const filesInput = document.getElementById('multipleFiles');
+            
+            if (!filesInput.files.length) {
+                showResult('Please select at least one file', false);
+                return;
+            }
+            
+            // Add all files
+            for (let file of filesInput.files) {
+                formData.append('files', file);
+            }
+            
+            // Add optional parameters
+            const folder = document.getElementById('folderMultiple').value;
+            if (folder) formData.append('folder', folder);
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let successMessage = `<h3>✅ Upload Complete!</h3>`;
+                    successMessage += `<p><strong>Summary:</strong> ${result.data.summary.successful} successful, ${result.data.summary.failed} failed</p>`;
+                    
+                    if (result.data.successful.length > 0) {
+                        successMessage += `<h4>Successful Uploads:</h4>`;
+                        result.data.successful.forEach((upload, index) => {
+                            successMessage += `
+                                <p><strong>File ${index + 1}:</strong> <a href="${upload.url}" target="_blank">${upload.originalFile.name}</a></p>
+                            `;
+                        });
+                    }
+                    
+                    if (result.data.failed.length > 0) {
+                        successMessage += `<h4>Failed Uploads:</h4>`;
+                        result.data.failed.forEach((failure, index) => {
+                            successMessage += `<p><strong>File:</strong> ${failure.originalFile.name} - Error: ${failure.error}</p>`;
+                        });
+                    }
+                    
+                    showResult(successMessage);
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Upload failed: ${error.message}`, false);
+            } finally {
+                showLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>
